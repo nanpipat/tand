@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Default capability for the tand main window",
+  "windows": ["main", "tand-*"],
+  "permissions": ["core:default"]
+}

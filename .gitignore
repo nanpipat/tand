@@ -1,0 +1,21 @@
+.DS_Store
+
+# dependencies
+node_modules/
+
+# frontend build output
+dist/
+
+# Tauri/Rust build output
+src-tauri/target/
+
+# local logs and env
+*.log
+.env
+.env.*
+
+# generated installers and screenshots
+*.dmg
+*.msi
+*.exe
+flare-retest.png
