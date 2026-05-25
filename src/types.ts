@@ -116,7 +116,7 @@ export type AppConfig = {
   lastOpenedFolder: string | null;
   lastActiveFile: string | null;
   lastEnvironment: string | null;
-  theme: "dark";
+  theme: "dark" | "light";
   layout: {
     leftPanelWidth: number;
     rightPanelWidth: number;

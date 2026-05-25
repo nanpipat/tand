@@ -101,7 +101,7 @@ export const api = {
   async createRequestFile(folderPath: string, name: string) {
     if (!isTauri) {
       ensureVirtualWorkspace();
-      const fileName = normalizeFileName(name);
+      const fileName = normalizeFileName(name, "new-request");
       const path = uniquePath(`${folderPath}/${fileName}`);
       const request = createDefaultRequest(fileName.replace(/\.json$/, "").replaceAll("-", " "));
       localStorage.setItem(`${filePrefix}${path}`, JSON.stringify(request));
@@ -109,6 +109,18 @@ export const api = {
       return path;
     }
     return invoke<string>("create_request_file", { folderPath, name });
+  },
+  async createEnvironmentFile(folderPath: string, name: string) {
+    if (!isTauri) {
+      ensureVirtualWorkspace();
+      const envDir = `${folderPath}/environments`;
+      const fileName = normalizeFileName(name, "environment");
+      const path = uniquePath(`${envDir}/${fileName}`);
+      localStorage.setItem(`${filePrefix}${path}`, JSON.stringify(defaultEnvironment(path.split("/").at(-1) ?? fileName)));
+      addVirtualDir(envDir);
+      return path;
+    }
+    return invoke<string>("create_environment_file", { folderPath, name });
   },
   async deleteFile(path: string) {
     if (!isTauri) {
@@ -284,9 +296,16 @@ function sortPath(a: string, b: string) {
   return a.localeCompare(b);
 }
 
-function normalizeFileName(name: string) {
-  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-request";
+function normalizeFileName(name: string, fallback: string) {
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback;
   return base.endsWith(".json") ? base : `${base}.json`;
+}
+
+function defaultEnvironment(fileName: string): Environment {
+  return {
+    name: fileName.replace(/\.json$/, "").replaceAll("-", " "),
+    variables: [],
+  };
 }
 
 function uniquePath(path: string) {

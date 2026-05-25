@@ -25,6 +25,45 @@
   --var-unresolved: #ffb15c;
   --hard-shadow: 4px 4px 0 var(--shadow);
   --hard-shadow-sm: 2px 2px 0 var(--shadow);
+  --topbar-bg: #06100c;
+  --brand-bg: #0b1511;
+  --brand-mark-bg: #07100c;
+  --active-bg: #10251d;
+  --send-bg: #0a1410;
+  --table-head-bg: #101713;
+  --editor-shell-bg: #0f0f0f;
+  --statusbar-bg: #090c0b;
+}
+
+:root[data-theme="light"] {
+  --bg-primary: #f7faf8;
+  --bg-secondary: #eef4f1;
+  --bg-tertiary: #ffffff;
+  --bg-hover: #e3f1ec;
+  --border: #c5d5cf;
+  --border-strong: #00b884;
+  --ink: #06100c;
+  --shadow: rgba(0, 184, 132, .42);
+  --text-primary: #101814;
+  --text-secondary: #4f635b;
+  --text-muted: #75867f;
+  --accent: #00b884;
+  --accent-strong: #009e72;
+  --success: #28c184;
+  --warning: #efad29;
+  --danger: #f14f6c;
+  --info: #388ee8;
+  --patch: #9dcc2f;
+  --var-resolved: #00b884;
+  --var-unresolved: #d97618;
+  --topbar-bg: #ffffff;
+  --brand-bg: #effff8;
+  --brand-mark-bg: #06100c;
+  --active-bg: #dff8ee;
+  --send-bg: #ffffff;
+  --table-head-bg: #edf5f1;
+  --editor-shell-bg: #ffffff;
+  --statusbar-bg: #f3f7f5;
 }
 
 * { box-sizing: border-box; }
@@ -67,7 +106,7 @@ input:focus, select:focus, textarea:focus {
   gap: 6px;
   padding: 0 8px;
   border-bottom: 1px solid var(--border);
-  background: var(--ink);
+  background: var(--topbar-bg);
 }
 .topbar button, .topbar select, .folder-button {
   height: 28px;
@@ -79,7 +118,7 @@ input:focus, select:focus, textarea:focus {
 }
 .brand {
   border-color: var(--border-strong);
-  background: #0b1511;
+  background: var(--brand-bg);
   color: var(--accent);
   font-weight: 900;
   letter-spacing: 0;
@@ -91,7 +130,7 @@ input:focus, select:focus, textarea:focus {
   width: 18px;
   height: 18px;
   border-radius: 2px;
-  background: #07100c;
+  background: var(--brand-mark-bg);
   border: 1px solid var(--border-strong);
 }
 .brand-mark::before {
@@ -252,7 +291,7 @@ input:focus, select:focus, textarea:focus {
   color: var(--text-primary);
 }
 .tree-row.active {
-  background: #10251d;
+  background: var(--active-bg);
   border-left-color: var(--accent);
   color: var(--text-primary);
 }
@@ -322,7 +361,7 @@ input:focus, select:focus, textarea:focus {
 .send-button {
   border: 2px solid var(--border-strong);
   border-radius: 4px;
-  background: #0a1410;
+  background: var(--send-bg);
   color: var(--accent);
   display: inline-flex;
   align-items: center;
@@ -411,7 +450,7 @@ input:focus, select:focus, textarea:focus {
   align-items: stretch;
 }
 .kv-head {
-  background: #101713;
+  background: var(--table-head-bg);
   color: var(--text-secondary);
   font-size: 11px;
   font-weight: 800;
@@ -466,7 +505,7 @@ input:focus, select:focus, textarea:focus {
 }
 .segmented button.active {
   color: var(--accent);
-  background: #10251d;
+  background: var(--active-bg);
   border-color: var(--border-strong);
 }
 .tool-button {
@@ -611,7 +650,7 @@ input:focus, select:focus, textarea:focus {
   border: 1px solid var(--border);
   border-radius: 4px;
   overflow: hidden;
-  background: #0f0f0f;
+  background: var(--editor-shell-bg);
   box-shadow: 2px 2px 0 rgba(124, 255, 203, .14);
 }
 
@@ -684,7 +723,7 @@ input:focus, select:focus, textarea:focus {
   gap: 9px;
   padding: 0 6px;
   border-top: 1px solid var(--border);
-  background: #090c0b;
+  background: var(--statusbar-bg);
   color: var(--text-secondary);
   font-size: 11px;
 }

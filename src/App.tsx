@@ -12,6 +12,7 @@ import {
   Folder,
   FolderOpen,
   History,
+  Moon,
   PanelBottom,
   PanelRight,
   Plus,
@@ -19,7 +20,9 @@ import {
   Search,
   Send,
   Settings,
+  Sun,
   Trash2,
+  Variable,
   Wand2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -41,6 +44,10 @@ export default function App() {
   useEffect(() => {
     void state.hydrate();
   }, []);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = state.theme;
+  }, [state.theme]);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -111,6 +118,9 @@ export default function App() {
               </button>
               <button title="New folder" onClick={() => void state.createFolder()}>
                 <Folder size={15} />
+              </button>
+              <button title="New environment" onClick={() => void state.createEnvironment()}>
+                <Variable size={15} />
               </button>
               <label className="search-box">
                 <Search size={14} />
@@ -197,6 +207,12 @@ function Toolbar({ activeEnvironment }: { activeEnvironment: Environment | null 
       <button title="History" onClick={() => void state.toggleHistory()}>
         <History size={16} />
       </button>
+      <button
+        title={state.theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+        onClick={() => state.setTheme(state.theme === "dark" ? "light" : "dark")}
+      >
+        {state.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+      </button>
       <button title="Settings">
         <Settings size={16} />
       </button>
@@ -221,6 +237,7 @@ function FileTree({ nodes, depth = 0 }: { nodes: FileNode[]; depth?: number }) {
         <FileJson size={28} />
         <p>No request files</p>
         <button onClick={() => void state.createRequest()}>Create Request</button>
+        <button onClick={() => void state.createEnvironment()}>Create Environment</button>
       </div>
     );
   }
@@ -536,6 +553,7 @@ function KeyValueTable({
 
 function BodyEditor({ body, env }: { body: RequestBody; env: Environment | null }) {
   const state = useAppStore();
+  const editorTheme = state.theme === "light" ? "vs-light" : "vs-dark";
   const updateBody = (patch: Partial<RequestBody>) =>
     state.updateRequest((draft) => ({ ...draft, request: { ...draft.request, body: { ...draft.request.body, ...patch } } }));
   const formatRequestJson = () => {
@@ -583,7 +601,7 @@ function BodyEditor({ body, env }: { body: RequestBody; env: Environment | null 
           <Editor
             height="100%"
             defaultLanguage={body.type === "json" ? "json" : "text"}
-            theme="vs-dark"
+            theme={editorTheme}
             value={typeof body.content === "string" ? body.content : ""}
             options={{ minimap: { enabled: false }, fontSize: 12, lineHeight: 18, wordWrap: "off", lineNumbersMinChars: 3 }}
             onChange={(value) => updateBody({ content: value ?? "" })}
@@ -697,6 +715,7 @@ function RequestSettingsEditor() {
 
 function ResponsePanel() {
   const state = useAppStore();
+  const editorTheme = state.theme === "light" ? "vs-light" : "vs-dark";
   const response = state.lastResponse;
   if (!response) {
     return (
@@ -750,7 +769,7 @@ function ResponsePanel() {
               key={`${response.statusCode}-${response.timeMs}-${response.sizeBytes}-${body.length}`}
               height="100%"
               language={contentType.includes("json") ? "json" : contentType.includes("xml") ? "xml" : "text"}
-              theme="vs-dark"
+              theme={editorTheme}
               value={body || "(empty response)"}
               options={{
                 readOnly: true,
@@ -900,7 +919,10 @@ function CreateDialog() {
   const dialog = state.createDialog;
 
   useEffect(() => {
-    if (dialog) setName(dialog.kind === "request" ? "new-request" : "new-folder");
+    if (!dialog) return;
+    if (dialog.kind === "request") setName("new-request");
+    if (dialog.kind === "folder") setName("new-folder");
+    if (dialog.kind === "environment") setName("local");
   }, [dialog]);
 
   if (!dialog) return null;
@@ -909,13 +931,16 @@ function CreateDialog() {
     const trimmed = name.trim();
     if (!trimmed) return;
     if (dialog.kind === "request") void state.createRequest(dialog.folderPath, trimmed);
-    else void state.createFolder(dialog.folderPath, trimmed);
+    if (dialog.kind === "folder") void state.createFolder(dialog.folderPath, trimmed);
+    if (dialog.kind === "environment") void state.createEnvironment(dialog.folderPath, trimmed);
   };
+
+  const title = dialog.kind === "request" ? "New Request" : dialog.kind === "folder" ? "New Folder" : "New Environment";
 
   return (
     <div className="modal-backdrop" onMouseDown={state.closeCreateDialog}>
       <div className="modal" onMouseDown={(event) => event.stopPropagation()}>
-        <h2>{dialog.kind === "request" ? "New Request" : "New Folder"}</h2>
+        <h2>{title}</h2>
         <label className="labeled-input">
           <span>Name</span>
           <input

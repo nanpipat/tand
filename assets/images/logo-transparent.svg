@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="tand logo">
+  <defs>
+    <linearGradient id="line" x1="236" y1="291" x2="792" y2="748" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2dd4bf"/>
+      <stop offset="0.56" stop-color="#60a5fa"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <filter id="glow" x="-35%" y="-35%" width="170%" height="170%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <g opacity="0.28" stroke="#64748b" stroke-width="3">
+    <path d="M212 276h600M212 392h600M212 508h600M212 624h600M212 740h600"/>
+    <path d="M276 212v600M392 212v600M508 212v600M624 212v600M740 212v600"/>
+  </g>
+  <path d="M266 512h182l72-134 113 268 78-134h48" fill="none" stroke="url(#line)" stroke-width="74" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <circle cx="266" cy="512" r="72" fill="#0f172a" stroke="#2dd4bf" stroke-width="40"/>
+  <circle cx="759" cy="512" r="72" fill="#0f172a" stroke="#f59e0b" stroke-width="40"/>
+  <path d="M357 318 230 512l127 194" fill="none" stroke="#e2e8f0" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M667 318 794 512 667 706" fill="none" stroke="#e2e8f0" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

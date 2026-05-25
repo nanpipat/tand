@@ -107,10 +107,37 @@ fn normalize_name(name: &str) -> String {
     out = out.replace("--", "-");
   }
   out = out.trim_matches('-').to_string();
+  if out.is_empty() {
+    out = "untitled".to_string();
+  }
   if out.ends_with(".json") {
     out
   } else {
     format!("{out}.json")
+  }
+}
+
+fn unique_file_path(path: PathBuf) -> PathBuf {
+  if !path.exists() {
+    return path;
+  }
+  let parent = path.parent().map(Path::to_path_buf).unwrap_or_default();
+  let stem = path
+    .file_stem()
+    .map(|s| s.to_string_lossy().to_string())
+    .unwrap_or_else(|| "untitled".to_string());
+  let ext = path.extension().map(|s| s.to_string_lossy().to_string());
+  let mut index = 2;
+  loop {
+    let file_name = match &ext {
+      Some(ext) => format!("{stem}-{index}.{ext}"),
+      None => format!("{stem}-{index}"),
+    };
+    let candidate = parent.join(file_name);
+    if !candidate.exists() {
+      return candidate;
+    }
+    index += 1;
   }
 }
 
@@ -198,6 +225,20 @@ fn default_request(name: &str) -> Value {
   })
 }
 
+fn default_environment(name: &str) -> Value {
+  json!({
+    "name": name,
+    "variables": []
+  })
+}
+
+fn display_name_from_path(path: &Path) -> String {
+  path
+    .file_stem()
+    .map(|s| s.to_string_lossy().replace('-', " "))
+    .unwrap_or_else(|| "untitled".to_string())
+}
+
 #[tauri::command]
 fn open_folder_dialog() -> Result<Option<String>, String> {
   Ok(
@@ -234,9 +275,22 @@ fn write_request_file(path: String, content: Value) -> Result<(), String> {
 fn create_request_file(folder_path: String, name: String) -> Result<String, String> {
   fs::create_dir_all(&folder_path).map_err(|e| e.to_string())?;
   let file_name = normalize_name(&name);
-  let path = PathBuf::from(folder_path).join(&file_name);
-  let display_name = file_name.trim_end_matches(".json").replace('-', " ");
+  let path = unique_file_path(PathBuf::from(folder_path).join(&file_name));
+  let display_name = display_name_from_path(&path);
   let text = serde_json::to_string_pretty(&default_request(&display_name)).map_err(|e| e.to_string())?;
+  fs::write(&path, text).map_err(|e| e.to_string())?;
+  Ok(path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn create_environment_file(folder_path: String, name: String) -> Result<String, String> {
+  let environment_dir = PathBuf::from(folder_path).join("environments");
+  fs::create_dir_all(&environment_dir).map_err(|e| e.to_string())?;
+  let file_name = normalize_name(&name);
+  let path = unique_file_path(environment_dir.join(&file_name));
+  let display_name = display_name_from_path(&path);
+  let text =
+    serde_json::to_string_pretty(&default_environment(&display_name)).map_err(|e| e.to_string())?;
   fs::write(&path, text).map_err(|e| e.to_string())?;
   Ok(path.to_string_lossy().to_string())
 }
@@ -724,6 +778,7 @@ pub fn run() {
       read_request_file,
       write_request_file,
       create_request_file,
+      create_environment_file,
       delete_file,
       rename_file,
       move_file,

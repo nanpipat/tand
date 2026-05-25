@@ -37,7 +37,8 @@ type AppState = {
   statusMessage: string;
   toasts: Toast[];
   config: AppConfig | null;
-  createDialog: { kind: "request" | "folder"; folderPath: string } | null;
+  createDialog: { kind: "request" | "folder" | "environment"; folderPath: string } | null;
+  theme: AppConfig["theme"];
   openNewWindow: () => Promise<void>;
   hydrate: () => Promise<void>;
   openFolder: (path?: string | null) => Promise<void>;
@@ -48,6 +49,7 @@ type AppState = {
   updateEnvironment: (updater: (environment: Environment) => Environment) => void;
   saveEnvironment: () => Promise<void>;
   createRequest: (folderPath?: string, name?: string) => Promise<void>;
+  createEnvironment: (folderPath?: string, name?: string) => Promise<void>;
   createFolder: (folderPath?: string, name?: string) => Promise<void>;
   closeCreateDialog: () => void;
   sendRequest: () => Promise<void>;
@@ -55,6 +57,7 @@ type AppState = {
   setActiveEnvironment: (name: string | null) => void;
   setActiveTab: (tab: AppState["activeTab"]) => void;
   setResponseTab: (tab: AppState["responseTab"]) => void;
+  setTheme: (theme: AppConfig["theme"]) => void;
   setLayout: (
     patch: Partial<Pick<AppState, "leftPanelWidth" | "rightPanelWidth" | "bottomPanelHeight" | "responsePlacement" | "leftPanelCollapsed" | "rightPanelCollapsed">>,
     options?: { persist?: boolean },
@@ -91,6 +94,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   toasts: [],
   config: null,
   createDialog: null,
+  theme: "dark",
 
   async openNewWindow() {
     try {
@@ -113,6 +117,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           activeEnvironmentEditor: null,
           environments: [],
           activeEnvironmentName: null,
+          theme: config.theme ?? "dark",
           isDirty: false,
           lastResponse: null,
           leftPanelWidth: config.layout.leftPanelWidth,
@@ -130,6 +135,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         openFolderPath: config.lastOpenedFolder,
         activeFilePath: config.lastActiveFile,
         activeEnvironmentName: config.lastEnvironment,
+        theme: config.theme ?? "dark",
         leftPanelWidth: config.layout.leftPanelWidth,
         rightPanelWidth: config.layout.rightPanelWidth,
         bottomPanelHeight: config.layout.bottomPanelHeight ?? 320,
@@ -229,6 +235,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!activeRequest) return;
     if (!activeFilePath) {
       try {
+        set({ statusMessage: "Choose a folder to save this scratch request" });
         const folder = await api.openFolderDialog();
         if (!folder) return;
         const path = await api.createRequestFile(folder, activeRequest.name || "scratch-request");
@@ -277,9 +284,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   async createRequest(folderPath, name) {
-    const root = folderPath ?? get().openFolderPath;
+    let root = folderPath ?? get().openFolderPath;
     if (!root) {
       await get().openFolder();
+      root = get().openFolderPath;
+      if (root) set({ createDialog: { kind: "request", folderPath: root } });
       return;
     }
     if (!name) {
@@ -293,9 +302,37 @@ export const useAppStore = create<AppState>((set, get) => ({
     get().toast("Created request", "success");
   },
 
+  async createEnvironment(folderPath, name) {
+    let root = folderPath ?? get().openFolderPath;
+    if (!root) {
+      await get().openFolder();
+      root = get().openFolderPath;
+      if (root) set({ createDialog: { kind: "environment", folderPath: root } });
+      return;
+    }
+    if (!name) {
+      set({ createDialog: { kind: "environment", folderPath: root } });
+      return;
+    }
+    try {
+      const path = await api.createEnvironmentFile(root, name);
+      set({ createDialog: null });
+      await get().refreshTree();
+      await get().selectFile(path);
+      get().toast("Created environment", "success");
+    } catch (error) {
+      get().toast(`Environment create failed: ${String(error)}`, "danger");
+    }
+  },
+
   async createFolder(folderPath, name) {
-    const root = folderPath ?? get().openFolderPath;
-    if (!root) return;
+    let root = folderPath ?? get().openFolderPath;
+    if (!root) {
+      await get().openFolder();
+      root = get().openFolderPath;
+      if (root) set({ createDialog: { kind: "folder", folderPath: root } });
+      return;
+    }
     if (!name) {
       set({ createDialog: { kind: "folder", folderPath: root } });
       return;
@@ -407,6 +444,13 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setResponseTab(responseTab) {
     set({ responseTab });
+  },
+
+  setTheme(theme) {
+    set({ theme });
+    const config = updateConfig(get().config, { theme });
+    set({ config });
+    void api.writeConfig(config);
   },
 
   setLayout(patch, options) {
